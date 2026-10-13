@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 concurrency:
@@ -18,6 +18,20 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install twelve esports career portraits
+        run: |
+          mkdir -p assets/avatars
+          if [ ! -s assets/avatars/esports-roster.png ]; then
+            curl --fail --location --retry 3 --connect-timeout 15 --max-time 90 \
+              "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/bae2ec916fdbe48ab74a110f9cad87bcf72e34e5d377f0b233e3cf57a760c83b.png" \
+              -o assets/avatars/esports-roster.png
+            test "$(wc -c < assets/avatars/esports-roster.png)" -gt 100000
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add assets/avatars/esports-roster.png
+            git commit -m "Add twelve generated esports avatar portraits"
+            git push || echo "Git push unavailable; image still included in Pages deployment"
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
